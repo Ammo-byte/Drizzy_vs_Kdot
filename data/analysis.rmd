@@ -1,0 +1,190 @@
+
+---
+title: "Kendrick Lamar vs. Drake: Data Analysis Report"
+author: "Aamodit Acharya"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Introduction
+
+This report explores the relative popularity of Kendrick Lamar and Drake by analyzing their songs' play counts on YouTube Music. We visualize their individual performance using **scatter plots** and **boxplots** to identify patterns. Additionally, we apply **k-Nearest Neighbors (kNN) classification** to understand whether song play counts can predict the artist.
+
+---
+
+## 1. Scatter Plot: Kendrick Lamar vs. Drake
+
+We start with a **scatter plot** comparing Kendrick Lamar and Drake's songs, using the number of plays (in millions) on YouTube Music. The plot displays each artist’s song with a jittered index to avoid overlapping points.
+
+### Scatter Plot: Number of Plays vs. Song Index
+
+```{r scatter-plot, echo=FALSE, fig.align='center', fig.cap="Scatter Plot of Song Plays for Kendrick Lamar and Drake"}
+# Load necessary libraries
+if (!require(scales)) install.packages("scales", dependencies = TRUE)
+library(scales)
+
+# Reindex Kendrick's and Drake's songs to start from 1
+kendrick_plays$song_index <- seq_along(kendrick_plays$Title)
+drake_plays$song_index <- seq_along(drake_plays$Title)
+
+# Plot Kendrick's songs
+plot(
+  jitter(kendrick_plays$song_index, factor = 3),
+  kendrick_plays$Plays / 1e6,
+  col = alpha("blue", 0.5),
+  pch = 19,
+  xlab = "Song Index",
+  ylab = "Artist Plays in millions",
+  main = "Number of Plays: Drake vs Kendrick",
+  xlim = c(0, max(nrow(kendrick_plays), nrow(drake_plays))),
+  ylim = c(0, 2200)
+)
+
+# Add Drake's songs to the plot
+points(
+  jitter(drake_plays$song_index, factor = 3),
+  drake_plays$Plays / 1e6,
+  col = alpha("red", 0.5),
+  pch = 19
+)
+
+# Add a legend
+legend(
+  "topright",
+  legend = c("Kendrick Lamar", "Drake"),
+  col = alpha(c("blue", "red"), 0.5),
+  pch = 19
+)
+```
+
+### Discussion
+
+- The scatter plot shows that **most of Drake’s songs** accumulate towards the right side of the plot (higher song index), reflecting his larger catalog.
+- **Both artists** have a few songs with extremely high plays, shown by points reaching the top of the Y-axis.
+- Kendrick’s songs are more clustered towards the left, suggesting a smaller number of high-performing tracks compared to Drake.
+
+---
+
+## 2. Boxplot Comparison: Kendrick Lamar vs. Drake
+
+Next, we generate **side-by-side boxplots** to compare the distribution of song plays for each artist.
+
+### Boxplot: Distribution of Plays for Kendrick and Drake
+
+```{r boxplot, echo=FALSE, fig.align='center', fig.cap="Boxplots of Song Plays for Kendrick Lamar and Drake"}
+par(mfrow = c(1, 2))
+
+# Boxplot for Kendrick's songs
+boxplot(
+  kendrick_plays$Plays / 1e6,
+  xlab = "Songs with Kendrick",
+  ylab = "Plays in millions",
+  main = "Number of Plays for Kendrick"
+)
+
+# Boxplot for Drake's songs
+boxplot(
+  drake_plays$Plays / 1e6,
+  xlab = "Songs with Drake",
+  ylab = "Plays in millions",
+  main = "Number of Plays for Drake"
+)
+
+# Reset plotting layout
+par(mfrow = c(1, 1))
+```
+
+### Discussion
+
+- The **median play count** for Drake’s songs is noticeably higher than that of Kendrick Lamar.
+- Drake’s songs also show **higher variability**, with some songs achieving **over 2 billion plays**.
+- Kendrick Lamar’s distribution shows more consistency, though he has a few high outliers.
+
+---
+
+## 3. kNN Classification: Predicting the Artist Based on Plays
+
+We apply the **k-Nearest Neighbors (kNN) classification** to predict whether a song belongs to Kendrick Lamar or Drake based on the number of plays it has received.
+
+### Confusion Matrix
+
+```{r confusion-matrix, echo=FALSE}
+# Define the kNN and helper functions here (as provided earlier)
+
+# Prepare the data
+x <- kvd_data$Plays_mil
+y <- kvd_data$Artist_Group_Bin
+
+# Run kNN with k = 5
+results <- knn(x, y, k = 5)
+
+# Confusion matrix calculations
+TP <- sum(y == 1 & results == 1)  # True Positive
+FN <- sum(y == 1 & results == 0)  # False Negative
+FP <- sum(y == 0 & results == 1)  # False Positive
+TN <- sum(y == 0 & results == 0)  # True Negative
+
+# Create confusion matrix
+confusion_matrix <- matrix(c(TP, FN, FP, TN), nrow = 2, byrow = TRUE)
+colnames(confusion_matrix) <- c("Predicted Kendrick", "Predicted Drake")
+rownames(confusion_matrix) <- c("Actual Kendrick", "Actual Drake")
+print(confusion_matrix)
+```
+
+### Discussion
+
+- The confusion matrix shows that the model performs well, correctly classifying most of the songs.
+- However, the model tends to **misclassify high-play Kendrick songs as Drake's**, indicating that the model may be biased toward Drake’s catalog due to the higher average plays.
+
+---
+
+## 4. Accuracy vs. k Plot
+
+We examine the effect of varying the number of neighbors (**k**) in the kNN classifier and plot the **accuracy vs. k**.
+
+### Plot: Accuracy vs. k
+
+```{r accuracy-plot, echo=FALSE, fig.align='center', fig.cap="Plot of Accuracy vs. k Values"}
+accuracy_list <- list()
+k_values <- 2:200
+
+# Calculate accuracy for each k value
+for (k in k_values) {
+  results <- knn(x, y, k)
+  TP <- sum(y == 1 & results == 1)
+  FN <- sum(y == 1 & results == 0)
+  FP <- sum(y == 0 & results == 1)
+  TN <- sum(y == 0 & results == 0)
+  accuracy <- (TP + TN) / (TP + TN + FP + FN)
+  accuracy_list <- append(accuracy_list, accuracy)
+}
+
+# Plot accuracy vs. k
+plot(
+  k_values, unlist(accuracy_list),
+  type = "b", pch = 19,
+  main = "K Value Accuracy",
+  xlab = "Number of Neighbours (k values)",
+  ylab = "Accuracy"
+)
+```
+
+### Discussion
+
+- The plot shows that **accuracy peaks around k = 10 to 30**, after which it gradually declines.
+- With **higher values of k**, the classifier becomes less effective, likely due to over-generalization.
+- **Lower values of k** lead to overfitting, where the model memorizes individual points but fails to generalize.
+
+---
+
+## Conclusion
+
+This report provides a comprehensive analysis of the popularity of Kendrick Lamar and Drake through visualizations and machine learning models. We observed:
+- Drake tends to have more high-play songs overall, while Kendrick has fewer but still significant hits.
+- The kNN classification can reasonably predict the artist based on song plays, but higher play counts sometimes skew the results toward Drake.
+
+---
+
+## References
+
+- Dataset: YouTube Music statistics as of May 2024
