@@ -4,6 +4,9 @@
 ## Project Overview
 This project explores the longstanding feud between Toronto rapper Drake and Compton’s Kendrick Lamar by analyzing their song plays on YouTube Music. The dataset includes 269 songs, and the goal is to uncover insights into their popularity using various statistical and machine learning techniques.
 
+## Analysis Report
+[View the full analysis report](analysis_report.Rmd)
+
 ## Table of Contents
 1. [Data Overview](#data-overview)
 2. [Exploratory Data Analysis](#exploratory-data-analysis)
