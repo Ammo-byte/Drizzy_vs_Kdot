@@ -23,10 +23,10 @@ We begin by comparing the distribution of plays for each artist and visualizing 
 
 ### Visualizations
 - Side-by-side boxplots comparing Kendrick and Drake’s song plays.
-- Scatter plot showing the number of plays vs. song duration.
+- Scatter plot showing the number of plays.
 
-![Kendrick vs Drake Boxplot](plots/kendrick_drake_boxplot.png)
-![Kendrick vs Drake Plays vs Duration](plots/kendrick_drake_duration.png)
+![Number of Plays Boxplot: Kendrick vs Drake Boxplot](plots/kendrick_drake_boxplot.png)
+![Number of Plays Scatter Plot: Kendrick vs Drake](plots/kendrick_drake_duration.png)
 
 ## Artist Classification Using kNN
 To predict whether a song belongs to Drake or Kendrick, we implement a k-Nearest Neighbors (kNN) classifier based on the number of plays. We explore various values for `k` to optimize accuracy.
